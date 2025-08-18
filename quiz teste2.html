@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz TDAH com Mascote</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    padding: 0;
+    background: linear-gradient(120deg, #a8edea, #fed6e3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+  }
+  #quiz-container {
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    padding: 30px 40px;
+    max-width: 650px;
+    width: 90%;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  h1 {
+    font-size: 26px;
+    color: #00796b;
+    margin-bottom: 20px;
+    animation: fadeIn 1s ease;
+  }
+  .question {
+    font-size: 20px;
+    margin: 20px 0;
+    animation: slideUp 0.6s ease;
+  }
+  .options button {
+    display: block;
+    width: 100%;
+    margin: 12px 0;
+    padding: 14px;
+    font-size: 18px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    animation: fadeIn 0.8s ease;
+  }
+  .options button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  }
+  .never { background: #cfd8dc; }
+  .rarely { background: #81d4fa; }
+  .sometimes { background: #fff176; }
+  .often { background: #ffb74d; }
+  .always { background: #e57373; }
+
+  #result {
+    display: none;
+    font-size: 22px;
+    margin-top: 20px;
+    padding: 20px;
+    border-radius: 12px;
+    animation: popIn 0.6s ease;
+  }
+  #restart {
+    margin-top: 20px;
+    padding: 12px 25px;
+    font-size: 18px;
+    background: #00796b;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: none;
+    animation: fadeIn 1s ease;
+  }
+  #restart:hover {
+    opacity: 0.9;
+  }
+
+  /* Mascote */
+  #mascote {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 120px;
+    transition: transform 0.3s;
+  }
+  #mascote img {
+    width: 100%;
+  }
+  #baloon {
+    position: absolute;
+    bottom: 150px;
+    right: 140px;
+    background: #fff;
+    border: 2px solid #00796b;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 16px;
+    max-width: 200px;
+    display: none;
+    animation: popIn 0.3s ease;
+  }
+
+  /* Animações */
+  @keyframes fadeIn {
+    from {opacity: 0;}
+    to {opacity: 1;}
+  }
+  @keyframes slideUp {
+    from {opacity:0; transform: translateY(30px);}
+    to {opacity:1; transform: translateY(0);}
+  }
+  @keyframes popIn {
+    0% {transform: scale(0);}
+    70% {transform: scale(1.1);}
+    100% {transform: scale(1);}
+  }
+</style>
+</head>
+<body>
+<div id="quiz-container">
+  <h1>Quiz: Descubra seu nível de TDAH</h1>
+  <div id="quiz">
+    <div class="question" id="question"></div>
+    <div class="options" id="options"></div>
+  </div>
+  <div id="result"></div>
+  <button id="restart" onclick="restartQuiz()">Refazer Quiz</button>
+
+  <!-- Mascote -->
+  <div id="baloon"></div>
+  <div id="mascote">
+    <img src="https://drive.google.com/file/d/1IbYJyIYyv6RwW2BzG3QdIQwjnhZrIJBA/view?usp=drive_link" alt="Mascote do ebook">
+  </div>
+</div>
+
+<script>
+const questions = [
+  "Tenho dificuldade de manter o foco em tarefas longas ou monótonas.",
+  "Me distraio facilmente com estímulos externos ou pensamentos aleatórios.",
+  "Esqueço frequentemente compromissos, tarefas ou detalhes importantes.",
+  "Tenho dificuldade em organizar atividades, trabalhos ou minha rotina diária.",
+  "Costumo adiar tarefas importantes.",
+  "Aja por impulso, sem pensar nas consequências.",
+  "Interrompo os outros ou tenho dificuldade em esperar minha vez em conversas.",
+  "Sinto inquietação interna ou dificuldade em permanecer sentado por longos períodos.",
+  "Começo muitas tarefas ao mesmo tempo, mas raramente as concluo.",
+  "Tenho dificuldade em tomar decisões simples ou me sinto sobrecarregado com escolhas."
+];
+
+const options = [
+  {text: "Nunca", value: 0, className: "never"},
+  {text: "Raramente", value: 1, className: "rarely"},
+  {text: "Algumas vezes", value: 2, className: "sometimes"},
+  {text: "Frequentemente", value: 3, className: "often"},
+  {text: "Quase sempre", value: 4, className: "always"}
+];
+
+let currentQuestion = 0;
+let score = 0;
+
+const questionEl = document.getElementById("question");
+const optionsEl = document.getElementById("options");
+const resultEl = document.getElementById("result");
+const restartBtn = document.getElementById("restart");
+const baloonEl = document.getElementById("baloon");
+
+function showQuestion() {
+  questionEl.textContent = questions[currentQuestion];
+  optionsEl.innerHTML = "";
+
+  // Mascote comentário
+  showMascotComment("Vamos para a próxima pergunta!");
+
+  options.forEach(option => {
+    const btn = document.createElement("button");
+    btn.textContent = option.text;
+    btn.className = option.className;
+    btn.onclick = () => selectOption(option.value);
+    optionsEl.appendChild(btn);
+  });
+}
+
+function selectOption(value) {
+  score += value;
+  currentQuestion++;
+  if(currentQuestion < questions.length){
+    showQuestion();
+  } else {
+    showResult();
+  }
+}
+
+function showResult() {
+  document.getElementById("quiz").style.display = "none";
+  restartBtn.style.display = "inline-block";
+  let level = "";
+  let color = "";
+  if(score <= 10) { 
+    level = "Baixo nível de sintomas"; 
+    color = "#81c784"; 
+    showMascotComment("Ótimo! Seus sintomas são baixos.");
+  } else if(score <= 20) { 
+    level = "Sintomas leves"; 
+    color = "#fff176"; 
+    showMascotComment("Hmm, sintomas leves. Fique atento!");
+  } else if(score <= 30) { 
+    level = "Sintomas moderados"; 
+    color = "#ffb74d"; 
+    showMascotComment("Moderado... talvez seja bom se organizar mais.");
+  } else { 
+    level = "Sintomas elevados"; 
+    color = "#e57373"; 
+    showMascotComment("Cuidado! Sintomas elevados. Considere apoio profissional.");
+  }
+  resultEl.style.background = color;
+  resultEl.style.display = "block";
+  resultEl.innerHTML = `<strong>Seu resultado: ${score} pontos</strong><br>${level}`;
+}
+
+function restartQuiz() {
+  currentQuestion = 0;
+  score = 0;
+  document.getElementById("quiz").style.display = "block";
+  resultEl.style.display = "none";
+  restartBtn.style.display = "none";
+  showQuestion();
+}
+
+// Mascote fala
+function showMascotComment(text) {
+  baloonEl.textContent = text;
+  baloonEl.style.display = "block";
+  setTimeout(() => {
+    baloonEl.style.display = "none";
+  }, 3000);
+}
+
+// Inicializa o quiz
+showQuestion();
+</script>
+</body>
+</html>
